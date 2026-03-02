@@ -1,4 +1,4 @@
-# QA Step Recorder — Desktop
+# Click Step Recorder — Desktop
 
 Herramienta de escritorio para automatizar la documentacion de planes de prueba manuales en **Windows**. Captura screenshots con el click resaltado en **cualquier ventana**.
 
@@ -94,3 +94,4 @@ QA/
 - Los pasos se guardan **en memoria** durante la sesion. Al cerrar la app se pierden (exporta antes de cerrar).
 - Para paginas en otros monitores funciona correctamente con configuraciones multi-monitor.
 - **Exportar a Excel abierto**: si el archivo .xlsx está abierto en Excel, la app usa automatización (xlwings) para añadir la hoja y guardar desde Excel, sin error de permisos.
+
