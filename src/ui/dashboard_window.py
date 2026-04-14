@@ -1,17 +1,20 @@
 """
 src/ui/dashboard_window.py — Dashboard de Click.
 """
+from functools import partial
+
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QScrollArea, QFrame,
-    QFileDialog, QMessageBox, QSizePolicy, QDialog,
+    QFileDialog, QMessageBox, QDialog,
     QLineEdit
 )
 from PyQt6.QtCore import Qt, pyqtSlot, QThread, pyqtSignal, QObject, QSize
-from PyQt6.QtGui import QFont, QPixmap, QIcon
+from PyQt6.QtGui import QPixmap, QIcon
 import os
 
 from src.step_manager import StepManager
+from src.paths import logo_path
 from src.ui.step_widget import StepWidget
 from src.ui.styles import DARK_STYLE
 
@@ -43,7 +46,8 @@ class ExcelExportDialog(QDialog):
         self.selected_path = None
         self.setWindowTitle("Exportar a Excel")
         self.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.WindowCloseButtonHint)
-        self.setFixedSize(520, 210)
+        self.sheet_name = ""
+        self.setFixedSize(520, 268)
         self.setStyleSheet("""
             QDialog    { background:#0a1c1f; color:#e4f4f6; font-family:"Segoe UI Variable Display","Segoe UI",sans-serif; }
             QLabel     { background:transparent; color:#e4f4f6; }
@@ -80,6 +84,15 @@ class ExcelExportDialog(QDialog):
         hint.setStyleSheet("font-size:11px; color:#3d7a84;")
         hint.setWordWrap(True)
         root.addWidget(hint)
+
+        from src.exporters.excel_exporter import suggested_export_sheet_title
+        sheet_lbl = QLabel("Nombre de la hoja")
+        sheet_lbl.setStyleSheet("font-size:11px; font-weight:600; color:#5a8a90;")
+        root.addWidget(sheet_lbl)
+        self.sheet_edit = QLineEdit()
+        self.sheet_edit.setText(suggested_export_sheet_title())
+        self.sheet_edit.setPlaceholderText("Ej. Prueba login — vacío = automático")
+        root.addWidget(self.sheet_edit)
 
         # Fila de ruta
         row = QHBoxLayout()
@@ -119,6 +132,7 @@ class ExcelExportDialog(QDialog):
         if not self.selected_path:
             QMessageBox.warning(self, "Sin archivo", "Por favor selecciona un archivo Excel primero.")
             return
+        self.sheet_name = (self.sheet_edit.text() or "").strip()
         self.accept()
 
 
@@ -137,12 +151,9 @@ class DashboardWindow(QMainWindow):
         self.resize(960, 740)
         self.setMinimumSize(720, 520)
 
-        # Icono
-        icon_path = os.path.normpath(
-            os.path.join(os.path.dirname(__file__), "..", "..", "assets", "icon128.png")
-        )
-        if os.path.exists(icon_path):
-            self.setWindowIcon(QIcon(icon_path))
+        lp = logo_path()
+        if os.path.isfile(lp):
+            self.setWindowIcon(QIcon(lp))
 
         self._build_ui()
         self.setStyleSheet(DARK_STYLE)
@@ -164,13 +175,11 @@ class DashboardWindow(QMainWindow):
         hdr.setSpacing(14)
 
         # Logo
-        icon_path = os.path.normpath(
-            os.path.join(os.path.dirname(__file__), "..", "..", "assets", "icon128.png")
-        )
         logo_lbl = QLabel()
-        if os.path.exists(icon_path):
-            pm = QPixmap(icon_path).scaled(
-                QSize(34, 34),
+        lp = logo_path()
+        if os.path.isfile(lp):
+            pm = QPixmap(lp).scaled(
+                QSize(120, 40),
                 Qt.AspectRatioMode.KeepAspectRatio,
                 Qt.TransformationMode.SmoothTransformation
             )
@@ -178,7 +187,8 @@ class DashboardWindow(QMainWindow):
         else:
             logo_lbl.setText("C")
             logo_lbl.setStyleSheet("font-size:18px; font-weight:700; color:#00B5C8;")
-        logo_lbl.setFixedWidth(38)
+        logo_lbl.setFixedHeight(40)
+        logo_lbl.setMinimumWidth(120)
 
         title_col = QVBoxLayout()
         title_col.setSpacing(0)
@@ -268,6 +278,7 @@ class DashboardWindow(QMainWindow):
 
         for step in steps:
             widget = StepWidget(step)
+            widget.delete_requested.connect(self._on_delete_step)
             self._steps_layout.insertWidget(self._steps_layout.count() - 1, widget)
 
     def _make_empty_widget(self):
@@ -290,6 +301,21 @@ class DashboardWindow(QMainWindow):
     def _set_export_enabled(self, enabled: bool):
         self.btn_excel.setEnabled(enabled)
 
+    @pyqtSlot(int)
+    def _on_delete_step(self, step_id: int):
+        r = QMessageBox.question(
+            self,
+            "Eliminar captura",
+            "¿Eliminar este paso de la sesión? No se puede deshacer.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if r != QMessageBox.StandardButton.Yes:
+            return
+        self.step_manager.remove_step(step_id)
+        self.recorder.set_step_count(self.step_manager.count)
+        self.refresh()
+
     @pyqtSlot()
     def _go_to_panel(self):
         if self._main_window:
@@ -305,7 +331,9 @@ class DashboardWindow(QMainWindow):
         dlg = ExcelExportDialog(self)
         if dlg.exec() == QDialog.DialogCode.Accepted and dlg.selected_path:
             from src.exporters.excel_exporter import export_excel
-            self._run_export(export_excel, dlg.selected_path, "excel")
+            title = dlg.sheet_name or None
+            export_fn = partial(export_excel, sheet_name=title)
+            self._run_export(export_fn, dlg.selected_path, "excel")
 
     # ─── Export: PDF / DOCX ───────────────────────────────────────
     def _export_pdf(self):

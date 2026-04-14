@@ -11,6 +11,7 @@ from PyQt6.QtGui import QFont, QPixmap, QIcon
 
 from src.recorder import RecordingEngine
 from src.step_manager import StepManager
+from src.paths import logo_path
 from src.ui.styles import DARK_STYLE
 
 
@@ -18,7 +19,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Click")
-        self.setFixedWidth(330)
+        self.setFixedWidth(360)
         self.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.WindowStaysOnTopHint)
 
         self._is_recording = False
@@ -32,11 +33,9 @@ class MainWindow(QMainWindow):
         self.recorder.status_message.connect(self._on_status_message)
         self.step_manager.steps_changed.connect(self._refresh_counter)
 
-        # Icono de la app
-        icon_path = os.path.join(os.path.dirname(__file__), "..", "..", "assets", "icon128.png")
-        icon_path = os.path.normpath(icon_path)
-        if os.path.exists(icon_path):
-            self.setWindowIcon(QIcon(icon_path))
+        lp = logo_path()
+        if os.path.isfile(lp):
+            self.setWindowIcon(QIcon(lp))
 
         self._build_ui()
         self.setStyleSheet(DARK_STYLE)
@@ -53,13 +52,11 @@ class MainWindow(QMainWindow):
         hdr = QHBoxLayout()
         hdr.setSpacing(10)
 
-        icon_path = os.path.normpath(
-            os.path.join(os.path.dirname(__file__), "..", "..", "assets", "icon128.png")
-        )
         logo_lbl = QLabel()
-        if os.path.exists(icon_path):
-            pm = QPixmap(icon_path).scaled(
-                QSize(36, 36),
+        lp = logo_path()
+        if os.path.isfile(lp):
+            pm = QPixmap(lp).scaled(
+                QSize(108, 36),
                 Qt.AspectRatioMode.KeepAspectRatio,
                 Qt.TransformationMode.SmoothTransformation
             )
@@ -68,7 +65,8 @@ class MainWindow(QMainWindow):
             logo_lbl.setText("C")
             logo_lbl.setFont(QFont("Segoe UI", 18, QFont.Weight.Bold))
             logo_lbl.setStyleSheet("color:#00B5C8;")
-        logo_lbl.setFixedWidth(40)
+        logo_lbl.setFixedHeight(40)
+        logo_lbl.setMinimumWidth(44)
 
         title = QLabel("Click")
         title.setObjectName("appTitle")

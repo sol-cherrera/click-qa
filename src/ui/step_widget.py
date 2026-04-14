@@ -27,9 +27,8 @@ class ImageViewerDialog(QDialog):
         img_lbl.setStyleSheet("background:#050d0e;")
         pm = _bytes_to_pixmap(screenshot_bytes)
         if pm:
-            scaled = pm.scaled(QSize(1240, 780), Qt.AspectRatioMode.KeepAspectRatio,
-                               Qt.TransformationMode.SmoothTransformation)
-            img_lbl.setPixmap(scaled)
+            # Resolución nativa de la captura (desplazamiento con barras) para poder ampliar con nitidez
+            img_lbl.setPixmap(pm)
         scroll.setWidget(img_lbl)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -50,6 +49,8 @@ class ClickableIcon(QLabel):
 
 class StepWidget(QWidget):
     """Tarjeta de paso: cabecera, botones de acción y miniatura."""
+
+    delete_requested = pyqtSignal(int)
 
     def __init__(self, step: dict, parent=None):
         super().__init__(parent)
@@ -87,6 +88,17 @@ class StepWidget(QWidget):
         hdr.addWidget(num_lbl)
         hdr.addWidget(badge)
         hdr.addStretch()
+
+        btn_del = QPushButton("Eliminar")
+        btn_del.setToolTip("Quitar este paso de la sesión")
+        btn_del.setStyleSheet(
+            "background:rgba(180,40,40,0.15); border:1px solid rgba(220,60,60,0.35);"
+            "border-radius:6px; color:#f87171; font-size:11px; font-weight:600;"
+            "padding:5px 12px;"
+        )
+        btn_del.clicked.connect(lambda: self.delete_requested.emit(int(self.step["id"])))
+        hdr.addWidget(btn_del)
+
         layout.addLayout(hdr)
 
         # ── Screenshot ───────────────────────────────────────────

@@ -1,22 +1,25 @@
 # Click Step Recorder — Desktop
 
-Herramienta de escritorio para automatizar la documentacion de planes de prueba manuales en **Windows**. Captura screenshots con el click resaltado en **cualquier ventana**.
+Herramienta de escritorio para documentar planes de prueba manuales. Captura pantallas con un **resaltado en forma de puntero** en la posición del ratón al momento de la captura, en **cualquier ventana** (multi-monitor).
 
-## Como funciona
+El logo de la aplicación es **`assets/solutoria-logo-wfondo.png`**.
 
-- Usa hooks globales del sistema operativo (`pynput`) para detectar clicks.
-- Dibuja el cursor en las coordenadas exactas del clic con `Pillow`.
-- Exporta en hoja nueva en archivo **Excel** seleccionado con imagenes embebidas.
+## Cómo funciona
+
+- Atajo global **Mayús + S** (`Shift+S`): toma la captura usando la posición actual del puntero como punto del highlight. **El clic del ratón no dispara captura** (evita capturas accidentales).
+- Hooks globales (`pynput`) y captura de pantalla con `mss`; el highlight se dibuja con `Pillow`.
+- **Exportación a Excel**: hoja nueva en un `.xlsx` existente, con imágenes embebidas a **alta resolución** (hasta 1920 px de ancho) para poder ampliar con buen detalle.
+- En el **dashboard** puedes **eliminar** pasos capturados por error, editar el highlight y ver la captura a **tamaño nativo** (con desplazamiento).
 
 ---
 
-## Instalacion
+## Instalación
 
-> **Requisitos**: Python 3.11 o superior
+> **Requisitos**: Python 3.10 o superior (recomendado 3.11+)
 
 ### 1. Crear entorno virtual (recomendado)
 
-En la carpeta `QA/` ejecuta:
+En la carpeta del proyecto (`click-qa`):
 
 ```bash
 python -m venv venv
@@ -25,11 +28,13 @@ python -m venv venv
 ### 2. Activar el entorno virtual
 
 **Windows (PowerShell o CMD):**
+
 ```bash
 venv\Scripts\activate
 ```
 
 **Linux / macOS:**
+
 ```bash
 source venv/bin/activate
 ```
@@ -44,54 +49,72 @@ Con el entorno virtual activado:
 pip install -r requirements.txt
 ```
 
-### 4. Ejecutar la aplicacion
+### 4. Ejecutar la aplicación
 
 ```bash
 python main.py
 ```
 
+En **macOS**, para atajos globales y captura de pantalla puede ser necesario conceder permisos de **accesibilidad** y **grabación de pantalla** a Terminal o al intérprete Python que uses.
+
 ---
 
 ## Uso
 
-### Panel de control (ventana pequena, siempre encima)
+### Panel de control (ventana pequeña, siempre encima)
 
-| Accion | Como |
+| Acción | Cómo |
 |--------|------|
-| **Iniciar grabacion** | Click en "▶ Iniciar Grabacion" |
-| **Pausar** | Click en "⏸ Pausar" durante la grabacion |
-| **Reanudar** | Click en "▶ Reanudar" |
-| **Detener** | Click en "⏹ Detener y Revisar" — abre el dashboard |
-| **Dashboard directo** | Click en "📊 Dashboard" durante la grabacion |
+| **Iniciar grabación** | Botón "Iniciar Grabacion" |
+| **Capturar un paso** | Coloca el puntero donde quieras señalar y pulsa **Mayús + S** |
+| **Pausar** | Botón "Pausar" (solo visible mientras grabas) |
+| **Reanudar** | Botón "Reanudar" (cuando está pausado) |
+| **Detener** | Botón "Detener y Revisar" — abre el dashboard |
+| **Dashboard** | Botón "Dashboard →" (también durante la grabación) |
 
+Las capturas **no** se toman al hacer clic; solo con **Mayús + S**. El panel y el dashboard se excluyen: si el puntero está sobre ellos, no se captura.
 
+### Región de captura (opcional)
+
+Puedes limitar la captura a un rectángulo de pantalla (útil con RDP/VPN) con **Seleccionar region** en el panel.
+
+### Dashboard
+
+- **Eliminar**: botón "Eliminar" en cada tarjeta (con confirmación).
+- **Exportar a Excel**: elige el archivo `.xlsx`, indica el **nombre de la hoja** (o déjalo en blanco para un nombre automático) y confirma.
+
+---
 
 ## Estructura del proyecto
 
 ```
-QA/
-├── main.py                      ← Punto de entrada
-├── requirements.txt             ← Dependencias Python
+click-qa/
+├── main.py                 ← Punto de entrada
+├── requirements.txt
 ├── README.md
+├── assets/
+│   └── solutoria-logo-wfondo.png
 ├── src/
-│   ├── recorder.py              ← Motor: pynput + mss + Pillow
-│   ├── step_manager.py          ← Gestion de pasos en memoria
-│   └── ui/
-│       ├── styles.py            ← Tema oscuro (QSS)
-│       ├── main_window.py       ← Panel control (siempre encima)
-│       ├── dashboard_window.py  ← Editor de pasos
-│       └── step_widget.py       ← Tarjeta de paso individual
+│   ├── paths.py            ← Rutas de recursos (logo)
+│   ├── recorder.py         ← Motor: pynput + mss + Pillow
+│   ├── step_manager.py     ← Pasos en memoria
+│   ├── ui/
+│   │   ├── styles.py
+│   │   ├── main_window.py
+│   │   ├── dashboard_window.py
+│   │   ├── step_widget.py
+│   │   ├── highlight_editor.py
+│   │   └── region_selector.py
 │   └── exporters/
-│       ├── pdf_exporter.py      ← fpdf2
-│       └── docx_exporter.py     ← python-docx
-└── extension/                   ← Extension Chrome (version anterior)
+│       ├── excel_exporter.py
+│       ├── pdf_exporter.py
+│       └── docx_exporter.py
 ```
 
 ---
 
 ## Notas
 
-- Los pasos se guardan **en memoria** durante la sesion. Al cerrar la app se pierden (exporta antes de cerrar).
-- Para paginas en otros monitores funciona correctamente con configuraciones multi-monitor.
-- **Exportar a Excel abierto**: si el archivo .xlsx está abierto en Excel, la app usa automatización (xlwings) para añadir la hoja y guardar desde Excel, sin error de permisos.
-
+- Los pasos se guardan **en memoria** durante la sesión. Al cerrar la app se pierden (exporta antes de cerrar).
+- Varios monitores: la captura usa el monitor que contiene el puntero (o la región definida).
+- **Excel abierto**: si el `.xlsx` está abierto en Excel, la app puede usar **xlwings** para insertar la hoja y guardar sin error de permisos.

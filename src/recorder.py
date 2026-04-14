@@ -80,7 +80,6 @@ class RecordingEngine(QObject):
         self.paused            = False
         self._step_count       = 0
         self._capturing        = False
-        self._mouse_listener   = None
         self._hotkey_listener  = None
         self._excluded_rects   = excluded_rects_fn or (lambda: [])
         self._region: dict | None = None
@@ -103,7 +102,7 @@ class RecordingEngine(QObject):
         self.active  = True
         self.paused  = False
         self._start_listeners()
-        self.status_message.emit("Grabacion iniciada")
+        self.status_message.emit("Grabación iniciada — pulsa Mayús+S para capturar")
 
     def pause(self):
         self.paused = True
@@ -124,44 +123,32 @@ class RecordingEngine(QObject):
 
     # ─── Listeners ─────────────────────────────────────────────────
     def _start_listeners(self):
-        self._mouse_listener = mouse.Listener(on_click=self._on_click)
-        self._mouse_listener.daemon = True
-        self._mouse_listener.start()
-
+        # Solo atajo de teclado: el clic del ratón no dispara captura (evita capturas accidentales).
         self._hotkey_listener = keyboard.GlobalHotKeys({
-            "<ctrl>+<shift>+s": self._on_hotkey
+            "<shift>+s": self._on_hotkey
         })
         self._hotkey_listener.daemon = True
         self._hotkey_listener.start()
 
     def _stop_listeners(self):
-        for listener in (self._mouse_listener, self._hotkey_listener):
-            if listener:
-                try:
-                    listener.stop()
-                except Exception:
-                    pass
-        self._mouse_listener  = None
+        if self._hotkey_listener:
+            try:
+                self._hotkey_listener.stop()
+            except Exception:
+                pass
         self._hotkey_listener = None
 
     # ─── Callbacks ─────────────────────────────────────────────────
-    def _on_click(self, x, y, button, pressed):
-        if not pressed or not self.active or self.paused or self._capturing:
-            return
-        if button != mouse.Button.left:
-            return
-        if self._is_in_excluded_rect(x, y):
-            return
-        threading.Thread(target=self._capture, args=(x, y, "Click"), daemon=True).start()
-
     def _on_hotkey(self):
         if not self.active or self.paused or self._capturing:
             return
         ctrl = mouse.Controller()
         x, y = ctrl.position
+        if self._is_in_excluded_rect(x, y):
+            return
         threading.Thread(
             target=self._capture,
-            args=(x, y, "Captura manual (Ctrl+Shift+S)"),
+            args=(x, y, "Captura (Mayús+S)"),
             daemon=True
         ).start()
 
@@ -210,12 +197,13 @@ class RecordingEngine(QObject):
 
             # RAW (sin highlight)
             raw_buf = io.BytesIO()
-            img.save(raw_buf, format="PNG", optimize=True)
+            # PNG sin pérdida; compress_level bajo = menos CPU, misma calidad visual
+            img.save(raw_buf, format="PNG", compress_level=3)
 
             # Con highlight (cursor flecha)
             hl_img = draw_highlight(img, rel_x, rel_y, self._step_count + 1)
             hl_buf = io.BytesIO()
-            hl_img.save(hl_buf, format="PNG", optimize=True)
+            hl_img.save(hl_buf, format="PNG", compress_level=3)
 
             return raw_buf.getvalue(), hl_buf.getvalue(), rel_x, rel_y
 
