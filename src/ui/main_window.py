@@ -18,7 +18,7 @@ from src.ui.styles import DARK_STYLE
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Click")
+        self.setWindowTitle("ClickQA")
         self.setFixedWidth(360)
         self.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.WindowStaysOnTopHint)
 
@@ -39,6 +39,8 @@ class MainWindow(QMainWindow):
 
         self._build_ui()
         self.setStyleSheet(DARK_STYLE)
+        self._apply_panel_fixed_geometry()
+        self._panel_idle_height = self.height()
 
     # ─── UI ────────────────────────────────────────────────────────
     def _build_ui(self):
@@ -68,7 +70,7 @@ class MainWindow(QMainWindow):
         logo_lbl.setFixedHeight(40)
         logo_lbl.setMinimumWidth(44)
 
-        title = QLabel("Click")
+        title = QLabel("ClickQA")
         title.setObjectName("appTitle")
 
         self.badge = QLabel("● Inactivo")
@@ -84,11 +86,12 @@ class MainWindow(QMainWindow):
         counter_box = QWidget()
         counter_box.setObjectName("counterBox")
         cb = QVBoxLayout(counter_box)
-        cb.setContentsMargins(12, 12, 12, 12)
-        cb.setSpacing(2)
+        cb.setContentsMargins(12, 14, 12, 14)
+        cb.setSpacing(4)
         self.lbl_count = QLabel("0")
         self.lbl_count.setObjectName("stepCountNum")
         self.lbl_count.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lbl_count.setMinimumHeight(48)
         sub = QLabel("pasos capturados")
         sub.setObjectName("stepCountSub")
         sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -172,15 +175,34 @@ class MainWindow(QMainWindow):
         rb.addLayout(btn_row)
         root.addWidget(region_box)
 
-        # ── Mensaje de estado ────────────────────────────────────
+        # ── Estado + pie (espaciado compacto entre líneas) ───────
         self.lbl_status = QLabel("Listo para grabar")
         self.lbl_status.setStyleSheet(
-            "font-size:11px; color:#3d7a84; background:transparent;"
+            "font-size:11px; color:#3d7a84; background:transparent; margin:0; padding:0;"
         )
         self.lbl_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lbl_status.setWordWrap(True)
-        root.addWidget(self.lbl_status)
-        root.addStretch()
+
+        self.lbl_shortcut = QLabel("Captura: Mayús + S")
+        self.lbl_shortcut.setStyleSheet(
+            "font-size:12px; color:#3d7a84; background:transparent; margin:0; padding:0;"
+        )
+        self.lbl_shortcut.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.lbl_love = QLabel("Con \u2665 para Solutoria")
+        self.lbl_love.setStyleSheet(
+            "font-size:10px; color:#2a5a62; background:transparent; margin:0; padding:0;"
+        )
+        self.lbl_love.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        foot = QWidget()
+        foot_l = QVBoxLayout(foot)
+        foot_l.setContentsMargins(0, 0, 0, 0)
+        foot_l.setSpacing(2)
+        foot_l.addWidget(self.lbl_status)
+        foot_l.addWidget(self.lbl_shortcut)
+        foot_l.addWidget(self.lbl_love)
+        root.addWidget(foot)
 
     # ─── Grabacion ─────────────────────────────────────────────────
     def _toggle_recording(self):
@@ -299,6 +321,17 @@ class MainWindow(QMainWindow):
         for w in (self.btn_record, self.btn_pause):
             w.style().unpolish(w)
             w.style().polish(w)
+
+        self._apply_panel_fixed_geometry(force_idle=not self._is_recording)
+
+    def _apply_panel_fixed_geometry(self, force_idle: bool = False):
+        self.setMinimumHeight(0)
+        self.setMaximumHeight(16777215)
+        self.adjustSize()
+        target_height = self.height()
+        if force_idle and hasattr(self, "_panel_idle_height"):
+            target_height = self._panel_idle_height
+        self.setFixedSize(360, target_height)
 
     def _style_badge(self, state: str):
         styles = {

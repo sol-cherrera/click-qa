@@ -102,7 +102,7 @@ class RecordingEngine(QObject):
         self.active  = True
         self.paused  = False
         self._start_listeners()
-        self.status_message.emit("Grabación iniciada — pulsa Mayús+S para capturar")
+        self.status_message.emit("Grabación iniciada")
 
     def pause(self):
         self.paused = True
@@ -148,7 +148,7 @@ class RecordingEngine(QObject):
             return
         threading.Thread(
             target=self._capture,
-            args=(x, y, "Captura (Mayús+S)"),
+            args=(x, y, "Captura"),
             daemon=True
         ).start()
 

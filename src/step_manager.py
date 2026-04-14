@@ -15,6 +15,7 @@ class StepManager(QObject):
     def __init__(self):
         super().__init__()
         self._steps: List[Dict[str, Any]] = []
+        self._next_id: int = 1
 
     # ─── Propiedades ───────────────────────────────────────────────
     @property
@@ -27,25 +28,27 @@ class StepManager(QObject):
 
     # ─── CRUD ──────────────────────────────────────────────────────
     def add_step(self, step: Dict[str, Any]):
+        step["id"] = self._next_id
+        self._next_id += 1
         step["number"] = len(self._steps) + 1
         self._steps.append(step)
         self.steps_changed.emit()
 
     def remove_step(self, step_id: int):
         step_id = int(step_id)
-        self._steps = [s for s in self._steps if s["id"] != step_id]
+        self._steps = [s for s in self._steps if s.get("id") != step_id]
         self._renumber()
         self.steps_changed.emit()
 
     def update_description(self, step_id: int, description: str):
         for step in self._steps:
-            if step["id"] == step_id:
+            if step.get("id") == step_id:
                 step["description"] = description
                 break
 
     def move_step(self, step_id: int, direction: int):
         """direction: -1 = subir, +1 = bajar"""
-        idx = next((i for i, s in enumerate(self._steps) if s["id"] == step_id), None)
+        idx = next((i for i, s in enumerate(self._steps) if s.get("id") == step_id), None)
         if idx is None:
             return
         new_idx = idx + direction
@@ -58,9 +61,8 @@ class StepManager(QObject):
     def add_manual_note(self):
         """Agrega una nota de texto (sin screenshot)."""
         from datetime import datetime
-        import time
         note = {
-            "id":               int(time.time() * 1000),
+            "id":               self._next_id,
             "number":           len(self._steps) + 1,
             "action":           "Nota manual",
             "click_pos":        None,
@@ -69,11 +71,13 @@ class StepManager(QObject):
             "timestamp":        datetime.now().isoformat(),
             "is_note":          True,
         }
+        self._next_id += 1
         self._steps.append(note)
         self.steps_changed.emit()
 
     def clear(self):
         self._steps = []
+        self._next_id = 1
         self.steps_changed.emit()
 
     def _renumber(self):

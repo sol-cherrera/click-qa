@@ -172,7 +172,7 @@ class DashboardWindow(QMainWindow):
         hdr_w.setFixedHeight(66)
         hdr = QHBoxLayout(hdr_w)
         hdr.setContentsMargins(28, 0, 24, 0)
-        hdr.setSpacing(14)
+        hdr.setSpacing(6)
 
         # Logo
         logo_lbl = QLabel()
@@ -188,11 +188,12 @@ class DashboardWindow(QMainWindow):
             logo_lbl.setText("C")
             logo_lbl.setStyleSheet("font-size:18px; font-weight:700; color:#00B5C8;")
         logo_lbl.setFixedHeight(40)
-        logo_lbl.setMinimumWidth(120)
+        logo_lbl.setMinimumWidth(0)
 
         title_col = QVBoxLayout()
         title_col.setSpacing(0)
-        title_lbl = QLabel("Click")
+        title_col.setContentsMargins(0, 0, 0, 0)
+        title_lbl = QLabel("ClickQA")
         title_lbl.setStyleSheet(
             "font-family:'Segoe UI Variable Display','Segoe UI',sans-serif;"
             "font-size:18px; font-weight:700; color:#00D4E8; background:transparent;"
@@ -257,6 +258,13 @@ class DashboardWindow(QMainWindow):
         self._scroll.setWidget(self._steps_container)
         root.addWidget(self._scroll)
 
+        love = QLabel("Con \u2665 para Solutoria")
+        love.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        love.setStyleSheet(
+            "font-size:10px; color:#2a5a62; background:transparent; padding:8px 12px 14px;"
+        )
+        root.addWidget(love)
+
     # ─── Render ────────────────────────────────────────────────────
     def refresh(self):
         # Limpiar existentes (excepto stretch final)
@@ -303,14 +311,21 @@ class DashboardWindow(QMainWindow):
 
     @pyqtSlot(int)
     def _on_delete_step(self, step_id: int):
-        r = QMessageBox.question(
-            self,
-            "Eliminar captura",
-            "¿Eliminar este paso de la sesión? No se puede deshacer.",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No,
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Icon.Question)
+        box.setWindowTitle("Eliminar captura")
+        box.setText("¿Eliminar este paso de la sesión? No se puede deshacer.")
+        box.setStandardButtons(
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
-        if r != QMessageBox.StandardButton.Yes:
+        box.setDefaultButton(QMessageBox.StandardButton.No)
+        label = box.findChild(QLabel, "qt_msgbox_label")
+        if label is not None:
+            label.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter)
+            label.setWordWrap(True)
+            label.setMinimumHeight(44)
+        r = box.exec()
+        if int(r) != int(QMessageBox.StandardButton.Yes):
             return
         self.step_manager.remove_step(step_id)
         self.recorder.set_step_count(self.step_manager.count)
