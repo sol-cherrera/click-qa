@@ -1,13 +1,10 @@
-# Click Step Recorder — Desktop
+# ClickQA
 
 Herramienta de escritorio para documentar planes de prueba manuales. Captura pantallas con un **resaltado en forma de puntero** en la posición del ratón al momento de la captura, en **cualquier ventana** (multi-monitor).
-
-El logo de la aplicación es **`assets/solutoria-logo-wfondo.png`**.
 
 ## Cómo funciona
 
 - Atajo global **Mayús + S** (`Shift+S`): toma la captura usando la posición actual del puntero como punto del highlight. **El clic del ratón no dispara captura** (evita capturas accidentales).
-- Hooks globales (`pynput`) y captura de pantalla con `mss`; el highlight se dibuja con `Pillow`.
 - **Exportación a Excel**: hoja nueva en un `.xlsx` existente, con imágenes embebidas a **alta resolución** (hasta 1920 px de ancho) para poder ampliar con buen detalle.
 - En el **dashboard** puedes **eliminar** pasos capturados por error, editar el highlight y ver la captura a **tamaño nativo** (con desplazamiento).
 
@@ -22,7 +19,7 @@ El logo de la aplicación es **`assets/solutoria-logo-wfondo.png`**.
 En la carpeta del proyecto (`click-qa`):
 
 ```bash
-python -m venv venv
+python -m venv .venv
 ```
 
 ### 2. Activar el entorno virtual
@@ -30,13 +27,13 @@ python -m venv venv
 **Windows (PowerShell o CMD):**
 
 ```bash
-venv\Scripts\activate
+.venv\Scripts\activate
 ```
 
 **Linux / macOS:**
 
 ```bash
-source venv/bin/activate
+source .venv/bin/activate
 ```
 
 Cuando el entorno esté activo verás `(venv)` al inicio del prompt.
@@ -76,7 +73,7 @@ Las capturas **no** se toman al hacer clic; solo con **Mayús + S**. El panel y 
 
 ### Región de captura (opcional)
 
-Puedes limitar la captura a un rectángulo de pantalla (útil con RDP/VPN) con **Seleccionar region** en el panel.
+Puedes limitar la captura a un rectángulo de pantalla con **Seleccionar region** en el panel.
 
 ### Dashboard
 
