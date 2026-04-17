@@ -119,8 +119,9 @@ pip install -r requirements-build.txt
 pyinstaller --noconfirm ClickQA.spec
 ```
 
-El archivo queda en `dist/ClickQA.exe`. Para tenerlo en Inicio y/o en Escritorio, hacer clic derecho para seleccionar `Anclar a Inicio` o `Enviar` -> `Escritorio (Acceso Directo)`. 
----
+El archivo queda en `dist/ClickQA.exe`. Para tenerlo en Inicio y/o en Escritorio: clic derecho en el ejecutable y elige **Anclar a Inicio**, o **Enviar a** → **Escritorio (crear acceso directo)**.
+
+* * *
 
 ## Notas
 
