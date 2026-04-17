@@ -11,7 +11,7 @@ from PyQt6.QtGui import QFont, QPixmap, QIcon
 
 from src.recorder import RecordingEngine
 from src.step_manager import StepManager
-from src.paths import logo_path
+from src.paths import logo_path, app_icon_path
 from src.ui.styles import DARK_STYLE
 
 
@@ -33,9 +33,9 @@ class MainWindow(QMainWindow):
         self.recorder.status_message.connect(self._on_status_message)
         self.step_manager.steps_changed.connect(self._refresh_counter)
 
-        lp = logo_path()
-        if os.path.isfile(lp):
-            self.setWindowIcon(QIcon(lp))
+        ip = app_icon_path()
+        if os.path.isfile(ip):
+            self.setWindowIcon(QIcon(ip))
 
         self._build_ui()
         self.setStyleSheet(DARK_STYLE)

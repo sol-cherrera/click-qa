@@ -14,7 +14,7 @@ from PyQt6.QtGui import QPixmap, QIcon
 import os
 
 from src.step_manager import StepManager
-from src.paths import logo_path
+from src.paths import logo_path, app_icon_path
 from src.ui.step_widget import StepWidget
 from src.ui.styles import DARK_STYLE
 
@@ -151,9 +151,9 @@ class DashboardWindow(QMainWindow):
         self.resize(960, 740)
         self.setMinimumSize(720, 520)
 
-        lp = logo_path()
-        if os.path.isfile(lp):
-            self.setWindowIcon(QIcon(lp))
+        ip = app_icon_path()
+        if os.path.isfile(ip):
+            self.setWindowIcon(QIcon(ip))
 
         self._build_ui()
         self.setStyleSheet(DARK_STYLE)

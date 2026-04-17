@@ -1,0 +1,2 @@
+# Dependencias solo para generar el ejecutable (PyInstaller)
+pyinstaller>=6.3.0

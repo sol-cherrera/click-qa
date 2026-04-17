@@ -110,6 +110,18 @@ click-qa/
 
 ---
 
+## Ejecutable (Windows)
+
+Con el entorno activado e instaladas las dependencias de build:
+
+```bash
+pip install -r requirements-build.txt
+pyinstaller --noconfirm ClickQA.spec
+```
+
+El archivo queda en `dist/ClickQA.exe`. Para tenerlo en Inicio y/o en Escritorio, hacer clic derecho para seleccionar `Anclar a Inicio` o `Enviar` -> `Escritorio (Acceso Directo)`. 
+---
+
 ## Notas
 
 - Los pasos se guardan **en memoria** durante la sesión. Al cerrar la app se pierden (exporta antes de cerrar).

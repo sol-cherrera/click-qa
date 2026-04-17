@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon
 
-from src.paths import logo_path
+from src.paths import app_icon_path
 from src.ui.main_window import MainWindow
 
 
@@ -23,9 +23,9 @@ def main():
     app.setApplicationVersion("1.0.0")
     app.setOrganizationName("QA Tools")
 
-    lp = logo_path()
-    if os.path.isfile(lp):
-        app.setWindowIcon(QIcon(lp))
+    ip = app_icon_path()
+    if os.path.isfile(ip):
+        app.setWindowIcon(QIcon(ip))
 
     window = MainWindow()
     window.show()
